@@ -1,66 +1,90 @@
 package Index;
-
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
+import java.io.*;
+import java.util.*;
 
 public class InvertedIndex {
-    public static void main(String args[]) throws IOException {
-      try{ Index2 index = new Index2();
-        String phrase = "";
-        index.buildIndex(new String[]{
-        		"C:\\Users\\htc\\Desktop\\Files\\100.txt",
-                "C:\\Users\\htc\\Desktop\\Files\\101.txt",
-                "C:\\\\Users\\\\htc\\\\Desktop\\\\Files\\\\102.txt",
-                "C:\\\\Users\\\\htc\\\\Desktop\\\\Files\\\\103.txt",
-                "C:\\\\Users\\\\htc\\\\Desktop\\\\Files\\\\104.txt",
-                "C:\\\\Users\\\\htc\\\\Desktop\\\\Files\\\\105.txt",
-                "C:\\\\Users\\\\htc\\\\Desktop\\\\Files\\\\106.txt",
-                "C:\\\\Users\\\\htc\\\\Desktop\\\\Files\\\\107.txt",
-                "C:\\\\Users\\\\htc\\\\Desktop\\\\Files\\\\108.txt",
-                "C:\\\\Users\\\\htc\\\\Desktop\\\\Files\\\\109.txt"
-        });     
-        
-        System.out.println("Enter Query");
-int c=0;
-        HashSet<Integer>res=new HashSet<>();
-          @SuppressWarnings("resource")
-          BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
-int m=0;
-    phrase = in.readLine();
-    phrase=phrase.toLowerCase();
-    String[] words = phrase.split("\\W+");
-    for(int i=0;i<words.length;i++)
-    {
-if ((words[i].equals("and"))||(words[i].equals("or")))
-{
-c++;        
-}
+    HashMap<String, DictEntry> index;
+
+    public InvertedIndex() {
+        index = new HashMap<>();
     }
-    if(c==0)
-    res=index.parserone(phrase);
-    else if(c==1)
-    res=index.parsertwo(phrase);
-    else if(c==2)
-    res=index.parserthree(phrase);
-    System.out.println("---------------------------------------------------------------------------------");
-    System.out.println("document:");
-for(int i:res)
-{
-    System.out.println("\t" + index.sources.get(i) + "\n");
-m++;
-}
-if(m==0)
-System.out.println("not found");
-System.out.println("---------------------------------------------------------------------------------");
+
+    public void buildIndex(String[] filenames) throws IOException {
+        for (String filename : filenames) {
+            int docId = Integer.parseInt(filename.substring(0, filename.lastIndexOf(".")));
+            BufferedReader reader = new BufferedReader(new FileReader(filename));
+            String line = null;
+            while ((line = reader.readLine()) != null) {
+                String[] terms = line.split(" ");
+                for (String term : terms) {
+                    term = term.toLowerCase().replaceAll("[^a-z0-9 ]", "");
+                    if (term.length() == 0)
+                        continue;
+                    if (!index.containsKey(term))
+                        index.put(term, new DictEntry());
+                    DictEntry entry = index.get(term);
+                    entry.term_freq++;
+                    if (entry.pList == null || entry.pList.docId != docId) {
+                        entry.doc_freq++;
+                        Posting posting = new Posting();
+                        posting.docId = docId;
+                        entry.pList = addPostingToList(entry.pList, posting);
+                    } else {
+                        entry.pList.dtf++;
+                    }
+                }
+            }
+            reader.close();
+        }
     }
-    catch (Exception e) {
-        System.out.println("Not found");
+
+    private Posting addPostingToList(Posting head, Posting posting) {
+        if (head == null)
+            return posting;
+        if (posting.docId < head.docId) {
+            posting.next = head;
+            return posting;
+        }
+        head.next = addPostingToList(head.next, posting);
+        return head;
     }
-}
+
+    public List<Integer> search(String query) {
+        query = query.toLowerCase().replaceAll("[^a-z0-9 ]", "");
+        if (!index.containsKey(query))
+            return null;
+        Posting pList = index.get(query).pList;
+        List<Integer> result = new ArrayList<>();
+        while (pList != null) {
+            result.add(pList.docId);
+            pList = pList.next;
+        }
+        return result;
+    }
+
+    public static void main(String[] args) throws IOException {
+        String[] filenames = {"1.txt","2.txt"};
+        InvertedIndex index = new InvertedIndex();
+        index.buildIndex(filenames);
+        List<Integer> result = index.search("omar");
+        if (result != null) {
+            for (int docId : result) {
+                System.out.println(docId + ".txt");
+            }
+        } else {
+            System.out.println("Not found.");
+        }
+    }
+
+    public class DictEntry {
+        int doc_freq = 0;
+        int term_freq = 0;
+        Posting pList = null;
+    }
+
+    public class Posting {
+        int docId;
+        int dtf = 1;
+        Posting next = null;
+    }
 }
