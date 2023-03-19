@@ -9,30 +9,43 @@ public class InvertedIndex {
         index = new HashMap<>();
     }
     
-    public void buildIndex(String[] filenames) throws IOException {//files name parameters
+    public void buildIndex(String[] filenames) throws IOException {
         for (String filename : filenames) {
-            int docId = Integer.parseInt(filename.substring(0, filename.lastIndexOf(".")));//convert the file name to intger for id 
-            BufferedReader reader = new BufferedReader(new FileReader(filename));//read file after opening and reading it by obj 
+            int docId = Integer.parseInt(filename.substring(0, filename.lastIndexOf(".")));
+            BufferedReader reader = new BufferedReader(new FileReader(filename));
             String line = null;
             while ((line = reader.readLine()) != null) {
-                String[] terms = line.split(" ");//split to words  by space delimiter
+                String[] terms = line.split(" ");
                 for (String term : terms) {
-                    term = term.toLowerCase().replaceAll("[^a-z0-9 ]", "");// to lower and remove invalid chars
+                    term = term.toLowerCase().replaceAll("[^a-z0-9 ]", "");
                     if (term.length() == 0)
                         continue;
-                    if (!index.containsKey(term))//if word is new (added to index)
-                        index.put(term, new DictEntry());//new directory
+                    if (!index.containsKey(term))
+                        index.put(term, new DictEntry());
                     DictEntry entry = index.get(term);
-                    entry.term_freq++;//update term frequency for this docId
-                    if (entry.pList == null || entry.pList.docId != docId) {//check if linkedlist is empty or if docId not found in this list
-                        entry.doc_freq++;//increment
-                        Posting posting = new Posting();//create new posting obj
+                    entry.term_freq++;
+                    Posting curr = entry.pList;
+                    Posting prev = null;
+                    boolean found = false;
+                    while (curr != null) {
+                        if (curr.docId == docId) {
+                            curr.term_freq++;
+                            found = true;
+                            break;
+                        }
+                        prev = curr;
+                        curr = curr.next;
+                    }
+                    if (!found) {
+                        entry.doc_freq++;
+                        Posting posting = new Posting();
                         posting.docId = docId;
                         posting.term_freq = 1;
-                        entry.pList = addPostingToList(entry.pList, posting); //add to this list
-                    } else {
-                        //entry.pList.dtf++;//if found this means  document contains the term multiple times
-                        entry.pList.term_freq++; 
+                        if (prev == null) {
+                            entry.pList = posting;
+                        } else {
+                            prev.next = posting;
+                        }
                     }
                 }
             }
@@ -56,22 +69,6 @@ public class InvertedIndex {
         head.next = addPostingToList(head.next, posting);//if >
         return head;
     }
-   
-   /* public List<Integer> search(String word) {
-    	word = word.toLowerCase().replaceAll("[^a-z0-9 ]", "");
-        if (!index.containsKey(word))//if not in hashmap
-            return null;
-        Posting pList = index.get(word).pList;//in hashmap
-        List<Integer> result = new ArrayList<>();
-        while (pList != null) {//The loop terminates when the end of the linked list is reached (i.e., pList is null)
-            result.add(pList.docId);
-            pList = pList.next;
-        }
-        
-       /*returns the list of document IDs that contain the query term.
-        If no documents contain the query term, an empty list is returned.
-        return result;
-    }*/
 
     public Map<Integer, Integer> searchWithTermFreq(String word) {
         word = word.toLowerCase().replaceAll("[^a-z0-9 ]", "");
