@@ -28,9 +28,11 @@ public class InvertedIndex {
                         entry.doc_freq++;//increment
                         Posting posting = new Posting();//create new posting obj
                         posting.docId = docId;
+                        posting.term_freq = 1;
                         entry.pList = addPostingToList(entry.pList, posting); //add to this list
                     } else {
-                        entry.pList.dtf++;//if found this means  document contains the term multiple times
+                        //entry.pList.dtf++;//if found this means  document contains the term multiple times
+                        entry.pList.term_freq++; 
                     }
                 }
             }
@@ -55,7 +57,7 @@ public class InvertedIndex {
         return head;
     }
    
-    public List<Integer> search(String word) {
+   /* public List<Integer> search(String word) {
     	word = word.toLowerCase().replaceAll("[^a-z0-9 ]", "");
         if (!index.containsKey(word))//if not in hashmap
             return null;
@@ -65,11 +67,24 @@ public class InvertedIndex {
             result.add(pList.docId);
             pList = pList.next;
         }
+        
        /*returns the list of document IDs that contain the query term.
-        If no documents contain the query term, an empty list is returned.*/
+        If no documents contain the query term, an empty list is returned.
+        return result;
+    }*/
+
+    public Map<Integer, Integer> searchWithTermFreq(String word) {
+        word = word.toLowerCase().replaceAll("[^a-z0-9 ]", "");
+        if (!index.containsKey(word))
+            return null;
+        Posting pList = index.get(word).pList;
+        Map<Integer, Integer> result = new HashMap<>(); // Use a map instead of a list to store document IDs and their corresponding term frequency
+        while (pList != null) {
+            result.put(pList.docId, pList.term_freq); // Add the document ID and its corresponding term frequency to the map
+            pList = pList.next;
+        }
         return result;
     }
-
     public static void main(String[] args) throws IOException {
         String[] filenames = {"0.txt","1.txt","2.txt","3.txt","4.txt","5.txt","6.txt","7.txt","8.txt","9.txt"};
         InvertedIndex index = new InvertedIndex();
@@ -77,14 +92,14 @@ public class InvertedIndex {
         Scanner sc= new Scanner(System.in);   
         System.out.print("Enter a Word to search: ");  
         String str= sc.nextLine();   
-        List<Integer> result = index.search(str);
-        if (result != null) {
-        	System.out.println(str+" Word is in: ");
-            for (int docId : result) {
-                System.out.println(docId + ".txt");
-            }
+        Map<Integer, Integer>  result = index.searchWithTermFreq(str);
+        if (result  == null || result .isEmpty()) {
+            System.out.println("No documents found containing the word : " + str);
         } else {
-            System.out.println("Not found.");
+            System.out.println("Documents containing the word : " + str);
+            for (Map.Entry<Integer, Integer> entry : result .entrySet()) {
+                System.out.println("Document: " + entry.getKey() + ".txt , Term Frequency: " + entry.getValue());
+            }
         }
     }
 }
