@@ -8,7 +8,6 @@ public class InvertedIndex {
     public InvertedIndex() {
         index = new HashMap<>();
     }
-
     public void buildIndex(String[] filenames) throws IOException {
         for (String filename : filenames) {
             int docId = Integer.parseInt(filename.substring(0, filename.lastIndexOf(".")));
@@ -74,17 +73,5 @@ public class InvertedIndex {
         } else {
             System.out.println("Not found.");
         }
-    }
-
-    public class DictEntry {
-        int doc_freq = 0;
-        int term_freq = 0;
-        Posting pList = null;
-    }
-
-    public class Posting {
-        int docId;
-        int dtf = 1;
-        Posting next = null;
     }
 }
