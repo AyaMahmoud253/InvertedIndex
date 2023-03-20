@@ -97,6 +97,7 @@ public class InvertedIndex {
             for (Map.Entry<Integer, Integer> entry : result .entrySet()) {
                 System.out.println("Document: " + entry.getKey() + ".txt , Term Frequency: " + entry.getValue());
             }
+            System.out.println("Document Frequency: " + result .size());
         }
     }
 }
