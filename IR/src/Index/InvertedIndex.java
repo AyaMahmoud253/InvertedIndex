@@ -11,16 +11,19 @@ public class InvertedIndex {
     
     public void buildIndex(String[] filenames) throws IOException {
         for (String filename : filenames) {
-            int docId = Integer.parseInt(filename.substring(0, filename.lastIndexOf(".")));
+        	// Extract the document ID from the filename
+            int docId = Integer.parseInt(filename.substring(0, filename.lastIndexOf(".")));//from begin to before .
             BufferedReader reader = new BufferedReader(new FileReader(filename));
             String line = null;
             while ((line = reader.readLine()) != null) {
+            	// Split the line into terms
                 String[] terms = line.split(" ");
                 for (String term : terms) {
+                	  // Normalize the term by converting to lowercase and removing non-alphanumeric characters
                     term = term.toLowerCase().replaceAll("[^a-z0-9 ]", "");
                     if (term.length() == 0)
                         continue;
-                    if (!index.containsKey(term))
+                    if (!index.containsKey(term))//not already in the index add it
                         index.put(term, new DictEntry());
                     DictEntry entry = index.get(term);
                     entry.term_freq++;
@@ -29,7 +32,7 @@ public class InvertedIndex {
                     boolean found = false;
                     while (curr != null) {
                         if (curr.docId == docId) {
-                            curr.term_freq++;
+                            curr.term_freq++; //found
                             found = true;
                             break;
                         }
@@ -40,7 +43,7 @@ public class InvertedIndex {
                         entry.doc_freq++;
                         Posting posting = new Posting();
                         posting.docId = docId;
-                        posting.term_freq = 1;
+                        posting.term_freq = 1;//frist time
                         if (prev == null) {
                             entry.pList = posting;
                         } else {
@@ -52,24 +55,7 @@ public class InvertedIndex {
             reader.close();
         }
     }
-
-    private Posting addPostingToList(Posting head, Posting posting) {// recursive method 
-    	/* The method takes two parameters: head, which is the head of the current list, 
-    	and posting, which is the new Posting object to be added to the list.*/
-        if (head == null)
-            return posting;//is head
-        if (posting.docId < head.docId) {
-        	/*the new Posting object is inserted at the beginning of the list, and its next pointer is set to the old head of the list. 
-        	The method then returns the new Posting object as the new head of the list.*/
-            posting.next = head;
-            return posting;
-        }
-        /* the method recursively calls itself with the next node in the list (i.e., head.next) and the new Posting object as parameters.
-         *  This continues until the new Posting object is inserted at the correct position in the list, and the method returns the original head of the list.*/
-        head.next = addPostingToList(head.next, posting);//if >
-        return head;
-    }
-
+    
     public Map<Integer, Integer> searchWithTermFreq(String word) {
         word = word.toLowerCase().replaceAll("[^a-z0-9 ]", "");
         if (!index.containsKey(word))
@@ -95,7 +81,7 @@ public class InvertedIndex {
     	k.close();
     	BufferedWriter c=new BufferedWriter(new FileWriter("3.txt"));
     	c.write("naira hager aya \n");
-    	c.write("koko nono \n");
+    	c.write("koko nono Doaa\n");
     	c.close();
     	BufferedWriter d=new BufferedWriter(new FileWriter("4.txt"));
     	d.write("moura baba \n");
