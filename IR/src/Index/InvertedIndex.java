@@ -68,6 +68,12 @@ public class InvertedIndex {
         }
         return result;
     }
+    public int getDocFreq(String word) {
+        word = word.toLowerCase().replaceAll("[^a-z0-9 ]", "");
+        if (!index.containsKey(word))
+            return 0;
+        return index.get(word).doc_freq;
+    }
     public static void main(String[] args) throws IOException {
     	BufferedWriter a=new BufferedWriter(new FileWriter("0.txt"));
     	a.write("aya Mahmoud \n");
@@ -119,7 +125,7 @@ public class InvertedIndex {
             for (Map.Entry<Integer, Integer> entry : result .entrySet()) {
                 System.out.println("Document: " + entry.getKey() + ".txt , Term Frequency: " + entry.getValue());
             }
-            System.out.println("Document Frequency: " + result .size());
+            System.out.println("Document Frequency: " + index.getDocFreq(str));
         }
     }
 }
